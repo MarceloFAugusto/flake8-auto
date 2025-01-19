@@ -135,7 +135,7 @@ function Repair-Flake8Errors {
     }
     $affectedFiles = $affectedFiles | Select-Object -Unique
 
-    if ($affectedFiles -and $affectedFiles.Count -eq 0) {
+    if ($null -eq $affectedFiles -or $affectedFiles.Length -eq 0) {
         Write-Host "`nNenhum arquivo válido encontrado para processar." -ForegroundColor Yellow
         return
     }

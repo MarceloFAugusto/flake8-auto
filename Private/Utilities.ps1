@@ -3,7 +3,7 @@ $script:logParameters = $null
 $script:projectLogPath = $null
 $script:currentLogFile = $null
 
-function Write-LogMessage {
+function script:Write-LogMessage {
     param (
         [string]$Message,
         [ValidateSet('Info', 'Warning', 'Error')]
@@ -19,7 +19,7 @@ function Write-LogMessage {
     Write-Host $Message -ForegroundColor $color
 }
 
-function Get-NextLogFile {
+function script:Get-NextLogFile {
     param (
         [string]$baseLogName = "flake8.log"
     )
@@ -52,7 +52,7 @@ function Get-NextLogFile {
     return $script:currentLogFile
 }
 
-function Get-CurrentLogFile {
+function script:Get-CurrentLogFile {
     if (-not (Assert-ProjectPath)) {
         return $null
     }
@@ -84,7 +84,7 @@ function Get-CurrentLogFile {
     return $null
 }
 
-function Get-LogConfiguration {
+function script:Get-LogConfiguration {
     if (-not (Assert-ProjectPath)) {
         return
     }

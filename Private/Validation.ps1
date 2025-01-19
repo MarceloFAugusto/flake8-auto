@@ -1,5 +1,5 @@
 # Funções auxiliares privadas
-function Assert-PythonInstalled {
+function script:Assert-PythonInstalled {
     [CmdletBinding()]
     param()
     
@@ -17,7 +17,7 @@ function Assert-PythonInstalled {
     }
 }
 
-function Assert-ProjectPath {
+function script:Assert-ProjectPath {
     if (-not $script:projectPath) {
         Write-Host "`nCaminho do projeto não definido. Selecionando diretório..." -ForegroundColor Yellow
         $script:projectPath = Select-ProjectDirectory
@@ -30,7 +30,7 @@ function Assert-ProjectPath {
     return $true
 }
 
-function Assert-ProjectEnvironment {
+function script:Assert-ProjectEnvironment {
     [CmdletBinding()]
     param()
     
@@ -41,7 +41,7 @@ function Assert-ProjectEnvironment {
     return $true
 }
 
-function Test-PackageInstalled {
+function script:Test-PackageInstalled {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
