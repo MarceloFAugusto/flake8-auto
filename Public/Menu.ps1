@@ -1,3 +1,30 @@
+function Show-MenuOptions {
+    Write-Host "=== Menu Principal ===" -ForegroundColor Cyan
+    Write-Host "1. Análise com Flake8"
+    Write-Host "2. Correção Automática"
+    Write-Host "Q. Sair"
+    Write-Host
+}
+
+function Show-AnalysisOptions {
+    Write-Host "`n=== Opções de Análise ===" -ForegroundColor Cyan
+    Write-Host "1. Verificar arquivo específico"
+    Write-Host "2. Verificar todo projeto"
+    Write-Host "3. Verificar com configurações personalizadas"
+    Write-Host "4. Exibir ajuda do Flake8"
+    Write-Host "5. Configurar arquivo de log"
+    Write-Host "6. Voltar"
+    Write-Host
+}
+
+function Show-CorrectionOptions {
+    Write-Host "`n=== Opções de Correção ===" -ForegroundColor Cyan
+    Write-Host "1. Formatar código com Black"
+    Write-Host "2. Tentar correção automática dos erros do Flake8"
+    Write-Host "3. Voltar"
+    Write-Host
+}
+
 function Show-Main {
     [CmdletBinding()]
     param(
@@ -41,60 +68,77 @@ function Show-Main {
             try {
                 switch ($option) {
                     '1' { 
-                        $filePath = Read-Host "Caminho do arquivo"
-                        Start-Flake8Analysis -Path $filePath
-                        Read-Host "Pressione ENTER para continuar"
+                        # Submenu de Análise
+                        do {
+                            Show-AnalysisOptions
+                            $analysisOption = Read-Host "Selecione uma opção"
+                            
+                            switch ($analysisOption) {
+                                '1' { 
+                                    $filePath = Read-Host "Caminho do arquivo"
+                                    Start-Flake8Analysis -Path $filePath
+                                }
+                                '2' { 
+                                    $projectDir = Select-ProjectDirectory
+                                    if ($projectDir) {
+                                        Start-Flake8Analysis -Path $projectDir
+                                    }
+                                }
+                                '3' { 
+                                    $targetPath = Select-AnalysisPath
+                                    if ($targetPath) {
+                                        $config = @{
+                                            MaxLineLength = Read-Host "Comprimento máximo da linha"
+                                            MaxComplexity = Read-Host "Complexidade máxima"
+                                        }
+                                        Start-Flake8Analysis -Path $targetPath -Config $config
+                                    }
+                                }
+                                '4' {
+                                    if (Test-Flake8Installation) {
+                                        $pythonPath = Get-VenvPython
+                                        & $pythonPath -m flake8 --help
+                                    }
+                                }
+                                '5' {
+                                    Get-LogConfiguration
+                                    Write-Host "`nConfiguração de log atualizada!" -ForegroundColor Green
+                                }
+                            }
+                            if ($analysisOption -ne '6') {
+                                Read-Host "Pressione ENTER para continuar"
+                            }
+                        } while ($analysisOption -ne '6')
                     }
                     '2' { 
-                        $projectDir = Select-ProjectDirectory
-                        if ($projectDir) {
-                            Start-Flake8Analysis -Path $projectDir
-                        }
-                        Read-Host "Pressione ENTER para continuar"
-                    }
-                    '3' { 
-                        $targetPath = Select-AnalysisPath
-                        if ($targetPath) {
-                            $config = @{
-                                MaxLineLength = Read-Host "Comprimento máximo da linha"
-                                MaxComplexity = Read-Host "Complexidade máxima"
+                        # Submenu de Correção
+                        do {
+                            Show-CorrectionOptions
+                            $correctionOption = Read-Host "Selecione uma opção"
+                            
+                            switch ($correctionOption) {
+                                '1' { Format-CodeWithBlack }
+                                '2' {
+                                    if (-not $script:projectPath) {
+                                        $script:projectPath = Select-ProjectDirectory
+                                    }
+                                    if ($script:projectPath) {
+                                        $logFile = Get-CurrentLogFile
+                                        if ($logFile) {
+                                            Write-Host "Usando arquivo de log: $logFile" -ForegroundColor Green
+                                            Repair-Flake8Errors $logFile
+                                        } else {
+                                            Write-Host "Nenhum arquivo de log encontrado!" -ForegroundColor Red
+                                        }
+                                    } else {
+                                        Write-Host "Diretório do projeto não configurado!" -ForegroundColor Red
+                                    }
+                                }
                             }
-                            Start-Flake8Analysis -Path $targetPath -Config $config
-                        }
-                        Read-Host "Pressione ENTER para continuar"
-                    }
-                    '4' {
-                        if (Test-Flake8Installation) {
-                            $pythonPath = Get-VenvPython
-                            & $pythonPath -m flake8 --help
-                        }
-                        Read-Host "Pressione ENTER para continuar"
-                    }
-                    '5' {
-                        Get-LogConfiguration
-                        Write-Host "`nConfiguração de log atualizada!" -ForegroundColor Green
-                        Read-Host "Pressione ENTER para continuar"
-                    }
-                    '6' {
-                        Format-CodeWithBlack
-                        Read-Host "Pressione ENTER para continuar"
-                    }
-                    '7' {
-                        if (-not $script:projectPath) {
-                            $script:projectPath = Select-ProjectDirectory
-                        }
-                        if ($script:projectPath) {
-                            $logFile = Get-CurrentLogFile
-                            if ($logFile) {
-                                Write-Host "Usando arquivo de log: $logFile" -ForegroundColor Green
-                                Repair-Flake8Errors $logFile
-                            } else {
-                                Write-Host "Nenhum arquivo de log encontrado!" -ForegroundColor Red
+                            if ($correctionOption -ne '3') {
+                                Read-Host "Pressione ENTER para continuar"
                             }
-                        } else {
-                            Write-Host "Diretório do projeto não configurado!" -ForegroundColor Red
-                        }
-                        Read-Host "Pressione ENTER para continuar"
+                        } while ($correctionOption -ne '3')
                     }
                     'Q' { return }
                     default {

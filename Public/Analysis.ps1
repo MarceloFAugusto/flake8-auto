@@ -15,19 +15,39 @@ function Start-Flake8Analysis {
     $pythonPath = Get-VenvPython
     $configParams = @()
     
-    if ($Config) {
-        $configParams += "--max-line-length=$($Config.MaxLineLength)"
-        $configParams += "--max-complexity=$($Config.MaxComplexity)"
-    }
+    try {
+        # Salva o diretório atual
+        Push-Location
+        
+        # Procura pelo arquivo .flake8 no diretório do projeto ou acima
+        $flake8Config = Find-Flake8Config $fullPath
+        if ($flake8Config) {
+            Write-Host "Usando arquivo de configuração: $flake8Config\.flake8" -ForegroundColor Green
+            # Adiciona o diretório do .flake8 como o diretório de trabalho
+            Set-Location $flake8Config
+        } else {
+            Write-Host "Arquivo .flake8 não encontrado. Usando configurações padrão." -ForegroundColor Yellow
+        }
 
-    # Usa os parâmetros de log fornecidos ou obtém novos se não existirem
-    $logParameters = $LogParams
-    if (-not $logParameters) {
-        Get-LogConfiguration
-        $logParameters = $script:logParameters
+        if ($Config) {
+            $configParams += "--max-line-length=$($Config.MaxLineLength)"
+            $configParams += "--max-complexity=$($Config.MaxComplexity)"
+        }
+
+        # Usa os parâmetros de log fornecidos ou obtém novos se não existirem
+        $logParameters = $LogParams
+        if (-not $logParameters) {
+            Get-LogConfiguration
+            $logParameters = $script:logParameters
+        }
+        
+        Write-Host "Executando análise em: $fullPath" -ForegroundColor Cyan
+        & $pythonPath -m flake8 $fullPath @configParams @logParameters
     }
-    
-    & $pythonPath -m flake8 $fullPath @configParams @logParameters
+    finally {
+        # Restaura o diretório original
+        Pop-Location
+    }
 }
 
 function Get-Flake8Errors {
