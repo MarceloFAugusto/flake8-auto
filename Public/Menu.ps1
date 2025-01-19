@@ -20,7 +20,10 @@ function Show-AnalysisOptions {
 function Show-CorrectionOptions {
     Write-Host "`n=== Opções de Correção ===" -ForegroundColor Cyan
     Write-Host "1. Formatar código com Black"
-    Write-Host "2. Tentar correção automática dos erros do Flake8"
+    Write-Host "2. Formatar código com Autopep8"
+    Write-Host "3. Remover imports não utilizados (Autoflake)"
+    Write-Host "4. Adicionar vírgulas pendentes (Add-Trailing-Comma)"
+    Write-Host "5. Tentar correção automática dos erros do Flake8"
     Write-Host "0. Voltar"
     Write-Host
 }
@@ -118,7 +121,10 @@ function Show-Main {
                             
                             switch ($correctionOption) {
                                 '1' { Format-CodeWithBlack }
-                                '2' {
+                                '2' { Format-WithAutopep8 }
+                                '3' { Format-WithAutoflake }
+                                '4' { Format-WithAddTrailingComma }
+                                '5' {
                                     if (-not $script:projectPath) {
                                         $script:projectPath = Select-ProjectDirectory
                                     }

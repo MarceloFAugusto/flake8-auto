@@ -144,3 +144,57 @@ function script:Get-LogConfiguration {
         }
     }
 }
+
+function Get-GitignorePatterns {
+    param (
+        [string]$projectPath
+    )
+
+    $gitignorePath = Join-Path $projectPath ".gitignore"
+    if (-not (Test-Path $gitignorePath)) {
+        return @()
+    }
+
+    $patterns = Get-Content $gitignorePath | Where-Object {
+        $_ -and -not $_.StartsWith('#') -and $_.Trim()
+    } | ForEach-Object {
+        $pattern = $_.Trim()
+        # Converte padrões do .gitignore para padrões do PowerShell
+        $pattern = $pattern.Replace('/', '\')
+        $pattern = $pattern.Replace('**', '*')
+        $pattern = $pattern.Replace('.*', '.*')
+        if ($pattern.StartsWith('\')) {
+            $pattern = $pattern.Substring(1)
+        }
+        $pattern
+    }
+
+    return $patterns
+}
+
+function Get-ProjectFiles {
+    param (
+        [string]$projectDir,
+        [string]$filter = "*.py"
+    )
+
+    $gitignorePatterns = Get-GitignorePatterns $projectDir
+    $files = Get-ChildItem -Path $projectDir -Filter $filter -Recurse
+
+    if ($gitignorePatterns.Count -gt 0) {
+        $files = $files | Where-Object {
+            $file = $_
+            $relativePath = $file.FullName.Substring($projectDir.Length + 1)
+            $ignored = $false
+            foreach ($pattern in $gitignorePatterns) {
+                if ($relativePath -like $pattern) {
+                    $ignored = $true
+                    break
+                }
+            }
+            -not $ignored
+        }
+    }
+
+    return $files
+}
