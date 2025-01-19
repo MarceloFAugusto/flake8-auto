@@ -9,6 +9,9 @@ function Start-Flake8Analysis {
     
     if (-not (Assert-ProjectEnvironment)) { return }
     
+    # Garantir que estamos usando caminho completo
+    $fullPath = Get-FullPath $Path
+    
     $pythonPath = Get-VenvPython
     $configParams = @()
     
@@ -24,7 +27,7 @@ function Start-Flake8Analysis {
         $logParameters = $script:logParameters
     }
     
-    & $pythonPath -m flake8 $Path @configParams @logParameters
+    & $pythonPath -m flake8 $fullPath @configParams @logParameters
 }
 
 function Get-Flake8Errors {

@@ -25,6 +25,8 @@ function script:Assert-ProjectPath {
             Write-Host "Não foi possível encontrar ou selecionar um diretório de projeto válido." -ForegroundColor Red
             return $false
         }
+        # Garantir que temos um caminho completo
+        $script:projectPath = [System.IO.Path]::GetFullPath($script:projectPath)
         Write-Host "Usando diretório do projeto: $script:projectPath" -ForegroundColor Green
     }
     return $true
@@ -68,4 +70,21 @@ function script:Test-PackageInstalled {
         Write-Error "Erro ao verificar pacote $PackageName`: $_"
         return $false
     }
+}
+
+function script:Get-FullPath {
+    param (
+        [Parameter(Mandatory)]
+        [string]$Path
+    )
+    
+    if ([System.IO.Path]::IsPathRooted($Path)) {
+        return $Path
+    }
+    
+    if ($script:projectPath) {
+        return Join-Path $script:projectPath $Path
+    }
+    
+    return [System.IO.Path]::GetFullPath($Path)
 }

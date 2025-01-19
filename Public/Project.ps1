@@ -42,14 +42,20 @@ function Select-ProjectDirectory {
     [CmdletBinding()]
     param()
     
-    $initialPath = (Get-Location).Path
+    $initialPath = if ([string]::IsNullOrEmpty($script:projectPath)) {
+        (Get-Location).Path
+    } else {
+        $script:projectPath
+    }
+    
     $configPath = Find-Flake8Config $initialPath
 
     if ($configPath) {
         Write-Host "`nEncontrado arquivo .flake8 em: $configPath" -ForegroundColor Green
         Write-Host "1. Usar este diretório"
         Write-Host "2. Selecionar outro diretório"
-        Write-Host "3. Cancelar"
+        Write-Host "3. Digitar caminho manualmente"
+        Write-Host "4. Cancelar"
         $choice = Read-Host "Escolha uma opção"
 
         switch ($choice) {
@@ -57,7 +63,12 @@ function Select-ProjectDirectory {
                 $script:projectPath = $configPath
                 return $configPath 
             }
-            "2" { break }
+            "2" { 
+                return Select-DirectoryBrowser $initialPath
+            }
+            "3" {
+                return Select-DirectoryManual
+            }
             default { 
                 $script:projectPath = $null
                 return $null 
@@ -66,16 +77,30 @@ function Select-ProjectDirectory {
     } else {
         Write-Host "`nNão foi encontrado arquivo .flake8 no diretório atual ou superiores." -ForegroundColor Yellow
         Write-Host "1. Selecionar diretório manualmente"
-        Write-Host "2. Cancelar"
+        Write-Host "2. Digitar caminho completo"
+        Write-Host "3. Cancelar"
         $choice = Read-Host "Escolha uma opção"
         
-        if ($choice -ne "1") {
-            $script:projectPath = $null
-            return $null
+        switch ($choice) {
+            "1" { 
+                return Select-DirectoryBrowser $initialPath
+            }
+            "2" {
+                return Select-DirectoryManual
+            }
+            default { 
+                $script:projectPath = $null
+                return $null 
+            }
         }
     }
+}
 
-    Write-Host "`nPor favor, selecione o diretório do projeto que contém o arquivo .flake8:"
+function Select-DirectoryBrowser {
+    param (
+        [string]$initialPath
+    )
+
     $folderBrowser = New-Object System.Windows.Forms.FolderBrowserDialog
     $folderBrowser.Description = "Selecione o diretório do projeto"
     $folderBrowser.SelectedPath = $initialPath
@@ -93,6 +118,26 @@ function Select-ProjectDirectory {
     }
     $script:projectPath = $null
     return $null
+}
+
+function Select-DirectoryManual {
+    Write-Host "`nDigite o caminho completo do diretório:" -ForegroundColor Yellow
+    $manualPath = Read-Host
+
+    if (Test-Path $manualPath) {
+        if (Test-Path (Join-Path $manualPath ".flake8")) {
+            $script:projectPath = $manualPath
+            return $manualPath
+        } else {
+            Write-Host "Arquivo .flake8 não encontrado no diretório informado!" -ForegroundColor Red
+            $script:projectPath = $null
+            return $null
+        }
+    } else {
+        Write-Host "Diretório não encontrado!" -ForegroundColor Red
+        $script:projectPath = $null
+        return $null
+    }
 }
 
 function Select-AnalysisPath {

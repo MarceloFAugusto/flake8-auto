@@ -32,8 +32,6 @@ function Show-Main {
         if (-not $script:projectPath) {
             throw "Caminho do projeto não definido"
         }
-        
-        Set-Location $script:projectPath
 
         # Menu principal
         do {
