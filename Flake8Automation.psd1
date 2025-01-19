@@ -33,7 +33,13 @@
         # Formatting
         'Format-CodeWithBlack',
         'Test-BlackInstallation',
-        'Confirm-BlackFormat'
+        'Confirm-BlackFormat',
+        'Format-WithAutopep8',
+        'Format-WithAutoflake',
+        'Format-WithAddTrailingComma',
+        'Test-Autopep8Installation',
+        'Test-AutoflakeInstallation',
+        'Test-AddTrailingCommaInstallation'
     )
     CmdletsToExport = @()
     VariablesToExport = '*'
