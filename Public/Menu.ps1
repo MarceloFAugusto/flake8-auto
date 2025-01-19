@@ -8,12 +8,12 @@ function Show-MenuOptions {
 
 function Show-AnalysisOptions {
     Write-Host "`n=== Opções de Análise ===" -ForegroundColor Cyan
-    Write-Host "1. Verificar arquivo específico"
-    Write-Host "2. Verificar todo projeto"
+    Write-Host "1. Verificar todo projeto"
+    Write-Host "2. Verificar arquivo específico"
     Write-Host "3. Verificar com configurações personalizadas"
     Write-Host "4. Exibir ajuda do Flake8"
     Write-Host "5. Configurar arquivo de log"
-    Write-Host "6. Voltar"
+    Write-Host "0. Voltar"
     Write-Host
 }
 
@@ -21,7 +21,7 @@ function Show-CorrectionOptions {
     Write-Host "`n=== Opções de Correção ===" -ForegroundColor Cyan
     Write-Host "1. Formatar código com Black"
     Write-Host "2. Tentar correção automática dos erros do Flake8"
-    Write-Host "3. Voltar"
+    Write-Host "0. Voltar"
     Write-Host
 }
 
@@ -75,14 +75,14 @@ function Show-Main {
                             
                             switch ($analysisOption) {
                                 '1' { 
-                                    $filePath = Read-Host "Caminho do arquivo"
-                                    Start-Flake8Analysis -Path $filePath
-                                }
-                                '2' { 
                                     $projectDir = Select-ProjectDirectory
                                     if ($projectDir) {
                                         Start-Flake8Analysis -Path $projectDir
                                     }
+                                }
+                                '2' { 
+                                    $filePath = Read-Host "Caminho do arquivo"
+                                    Start-Flake8Analysis -Path $filePath
                                 }
                                 '3' { 
                                     $targetPath = Select-AnalysisPath
@@ -105,10 +105,10 @@ function Show-Main {
                                     Write-Host "`nConfiguração de log atualizada!" -ForegroundColor Green
                                 }
                             }
-                            if ($analysisOption -ne '6') {
+                            if ($analysisOption -ne '0') {
                                 Read-Host "Pressione ENTER para continuar"
                             }
-                        } while ($analysisOption -ne '6')
+                        } while ($analysisOption -ne '0')
                     }
                     '2' { 
                         # Submenu de Correção
@@ -135,10 +135,10 @@ function Show-Main {
                                     }
                                 }
                             }
-                            if ($correctionOption -ne '3') {
+                            if ($correctionOption -ne '0') {
                                 Read-Host "Pressione ENTER para continuar"
                             }
-                        } while ($correctionOption -ne '3')
+                        } while ($correctionOption -ne '0')
                     }
                     'Q' { return }
                     default {
