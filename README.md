@@ -28,14 +28,14 @@ Ferramenta de automação PowerShell para análise e correção de código Pytho
 git clone https://github.com/seu-usuario/flake8_automation.git
 ```
 
+## Importação e uso
+
 2. Importe o módulo:
 ```powershell
-Import-Module .\Flake8Automation.psd1
+Import-Module (Join-Path $PSScriptRoot "Flake8Automation.psd1") -Verbose
 ```
 
-## Uso
-
-### Iniciar a ferramenta
+3. Iniciar a ferramenta:
 
 ```powershell
 Show-Main [-ProjectPath <caminho>] [-Force]
@@ -44,6 +44,25 @@ Show-Main [-ProjectPath <caminho>] [-Force]
 Parâmetros:
 - `-ProjectPath`: (Opcional) Caminho do projeto Python a ser analisado
 - `-Force`: (Opcional) Força a recriação do ambiente virtual
+
+## Uso direto
+
+### Usando o Script de Inicialização
+
+A maneira mais simples de iniciar a ferramenta é usando o script `Start-Flake8Tool.ps1`:
+
+```powershell
+.\Start-Flake8Tool.ps1 [-ProjectPath <caminho>] [-Force]
+```
+
+Parâmetros:
+- `-ProjectPath`: (Opcional) Caminho do projeto Python a ser analisado
+- `-Force`: (Opcional) Força a recriação do ambiente virtual
+
+Exemplo:
+```powershell
+.\Start-Flake8Tool.ps1 -ProjectPath "C:\MeuProjeto\Python" -Force
+```
 
 ### Menu Principal
 
