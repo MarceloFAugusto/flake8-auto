@@ -61,14 +61,20 @@ function Show-Main {
                         Start-Flake8Analysis -Path $filePath
                     }
                     '2' { 
-                        Start-Flake8Analysis -Path "."
+                        $projectDir = Select-ProjectDirectory
+                        if ($projectDir) {
+                            Start-Flake8Analysis -Path $projectDir
+                        }
                     }
                     '3' { 
-                        $config = @{
-                            MaxLineLength = Read-Host "Comprimento máximo da linha"
-                            MaxComplexity = Read-Host "Complexidade máxima"
+                        $targetPath = Select-AnalysisPath
+                        if ($targetPath) {
+                            $config = @{
+                                MaxLineLength = Read-Host "Comprimento máximo da linha"
+                                MaxComplexity = Read-Host "Complexidade máxima"
+                            }
+                            Start-Flake8Analysis -Path $targetPath -Config $config
                         }
-                        Start-Flake8Analysis -Path "." -Config $config
                     }
                     '4' {
                         if (Test-Flake8Installation) {

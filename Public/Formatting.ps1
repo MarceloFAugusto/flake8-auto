@@ -20,8 +20,11 @@ function Format-CodeWithBlack {
             }
         }
         '2' {
-            Write-Host "Formatando todo o projeto..." -ForegroundColor Yellow
-            & $pythonPath -m black .
+            $projectDir = Select-ProjectDirectory
+            if ($projectDir) {
+                Write-Host "Formatando projeto em: $projectDir" -ForegroundColor Yellow
+                & $pythonPath -m black $projectDir
+            }
         }
         default {
             Write-Host "Opção inválida!" -ForegroundColor Red

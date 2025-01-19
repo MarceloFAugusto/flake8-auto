@@ -31,13 +31,23 @@ function Select-ProjectDirectory {
         Write-Host "`nEncontrado arquivo .flake8 em: $configPath" -ForegroundColor Green
         Write-Host "1. Usar este diretório"
         Write-Host "2. Selecionar outro diretório"
+        Write-Host "3. Cancelar"
         $choice = Read-Host "Escolha uma opção"
 
-        if ($choice -eq "1") {
-            return $configPath
+        switch ($choice) {
+            "1" { return $configPath }
+            "2" { break }
+            default { return $null }
         }
     } else {
         Write-Host "`nNão foi encontrado arquivo .flake8 no diretório atual ou superiores." -ForegroundColor Yellow
+        Write-Host "1. Selecionar diretório manualmente"
+        Write-Host "2. Cancelar"
+        $choice = Read-Host "Escolha uma opção"
+        
+        if ($choice -ne "1") {
+            return $null
+        }
     }
 
     Write-Host "`nPor favor, selecione o diretório do projeto que contém o arquivo .flake8:"
@@ -55,4 +65,32 @@ function Select-ProjectDirectory {
         }
     }
     return $null
+}
+
+function Select-AnalysisPath {
+    Write-Host "`nEscolha o tipo de análise:" -ForegroundColor Cyan
+    Write-Host "1. Verificar arquivo específico"
+    Write-Host "2. Verificar diretório de projeto"
+    Write-Host "3. Cancelar"
+    
+    $choice = Read-Host "Opção"
+    
+    switch ($choice) {
+        '1' {
+            Write-Host "`nDigite o caminho do arquivo:" -ForegroundColor Yellow
+            $filePath = Read-Host
+            if (Test-Path $filePath) {
+                return $filePath
+            } else {
+                Write-Host "Arquivo não encontrado!" -ForegroundColor Red
+                return $null
+            }
+        }
+        '2' {
+            return Select-ProjectDirectory
+        }
+        default {
+            return $null
+        }
+    }
 }
