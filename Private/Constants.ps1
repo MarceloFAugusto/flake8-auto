@@ -9,7 +9,7 @@ $script:ERROR_CODES = @{
 $script:defaultConfig = @{
     MaxLineLength = 120
     MaxComplexity = 10
-    LogFormat = "'%(path)s:%(row)d:%(col)d: %(code)s %(text)s'"
+    LogFormat = "'%(path)s||%(row)d||%(col)d|| %(code)s %(text)s'"
 }
 
 $script:REQUIRED_PACKAGES = @(

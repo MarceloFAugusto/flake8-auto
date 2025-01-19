@@ -20,7 +20,8 @@ function Start-Flake8Analysis {
     # Usa os parâmetros de log fornecidos ou obtém novos se não existirem
     $logParameters = $LogParams
     if (-not $logParameters) {
-        $logParameters = Get-LogConfiguration
+        Get-LogConfiguration
+        $logParameters = $script:logParameters
     }
     
     & $pythonPath -m flake8 $Path @configParams @logParameters
@@ -37,7 +38,6 @@ function Get-Flake8Errors {
     }
 
     $errors = @{}
-    # Inicializa o dicionário com os códigos de erro conhecidos
     $script:ERROR_CODES.Keys | ForEach-Object {
         $errors[$_] = @()
     }
@@ -45,8 +45,9 @@ function Get-Flake8Errors {
 
     Get-Content $logFile | ForEach-Object {
         $line = $_
-        if ($line -match ':(.*?):.*?: ([A-Z][0-9]{3})') {
-            $code = $matches[2]
+        $line = $line.Trim("'")
+        if ($line -match '^(.*?)\|\|(\d+)\|\|(\d+)\|\| ([A-Z][0-9]{3})') {
+            $code = $matches[4]
             if ($errors.ContainsKey($code)) {
                 $errors[$code] += $line
             } else {
@@ -106,10 +107,9 @@ function Repair-Flake8Errors {
     $affectedFiles = @()
     $errors.Values | ForEach-Object {
         $_ | ForEach-Object {
-            if ($_ -match '^[.\\]*(.*?):') {
+            if ($_ -match '^(.*?)\|\|') {
                 try {
-                    # Remove quaisquer aspas do caminho e normaliza
-                    $filePath = $matches[1].Trim("'").Trim('"')
+                    $filePath = $matches[1]
                     
                     # Se o caminho começar com .\ ou /, considera como relativo ao diretório do projeto
                     if ($filePath -match '^[.\\\/]') {
@@ -127,7 +127,7 @@ function Repair-Flake8Errors {
                         Write-Host "Arquivo não encontrado: $fullPath" -ForegroundColor Yellow
                     }
                 } catch {
-                    Write-Host "Erro ao processar caminho: $($matches[1])" -ForegroundColor Red
+                    Write-Host "Erro ao processar caminho: $filePath" -ForegroundColor Red
                     Write-Host $_.Exception.Message -ForegroundColor Red
                 }
             }
@@ -135,7 +135,7 @@ function Repair-Flake8Errors {
     }
     $affectedFiles = $affectedFiles | Select-Object -Unique
 
-    if ($affectedFiles.Count -eq 0) {
+    if ($affectedFiles -and $affectedFiles.Count -eq 0) {
         Write-Host "`nNenhum arquivo válido encontrado para processar." -ForegroundColor Yellow
         return
     }

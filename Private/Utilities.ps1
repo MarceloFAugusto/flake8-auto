@@ -1,3 +1,8 @@
+# Variáveis globais
+$script:logParameters = $null
+$script:projectLogPath = $null
+$script:currentLogFile = $null
+
 function Write-LogMessage {
     param (
         [string]$Message,
@@ -19,25 +24,71 @@ function Get-NextLogFile {
         [string]$baseLogName = "flake8.log"
     )
     
-    if (-not (Test-Path $baseLogName)) {
-        return $baseLogName
+    if (-not (Assert-ProjectPath)) {
+        return $null
+    }
+
+    $script:projectLogPath = Join-Path $script:projectPath "logs"
+    
+    if (-not (Test-Path $script:projectLogPath)) {
+        New-Item -ItemType Directory -Path $script:projectLogPath | Out-Null
+    }
+
+    $fullPath = Join-Path $script:projectLogPath $baseLogName
+    if (-not (Test-Path $fullPath)) {
+        $script:currentLogFile = $fullPath
+        return $fullPath
     }
 
     $baseName = [System.IO.Path]::GetFileNameWithoutExtension($baseLogName)
     $extension = [System.IO.Path]::GetExtension($baseLogName)
     $counter = 1
 
-    while (Test-Path "${baseName}${extension}.$counter") {
+    while (Test-Path (Join-Path $script:projectLogPath "${baseName}${extension}.$counter")) {
         $counter++
     }
 
-    return "${baseName}${extension}.$counter"
+    $script:currentLogFile = Join-Path $script:projectLogPath "${baseName}${extension}.$counter"
+    return $script:currentLogFile
 }
 
-# Variável global para armazenar parâmetros de log
-$script:logParameters = $null
+function Get-CurrentLogFile {
+    if (-not (Assert-ProjectPath)) {
+        return $null
+    }
+
+    if (-not $script:projectLogPath) {
+        $script:projectLogPath = Join-Path $script:projectPath "logs"
+    }
+
+    # Se já temos um arquivo de log definido e ele existe, retorna ele
+    if ($script:currentLogFile -and (Test-Path $script:currentLogFile)) {
+        return $script:currentLogFile
+    }
+
+    # Se o diretório de logs não existe, retorna null
+    if (-not (Test-Path $script:projectLogPath)) {
+        return $null
+    }
+
+    # Procura pelo arquivo .log mais recente
+    $lastLog = Get-ChildItem -Path $script:projectLogPath -Filter "*.log" |
+        Sort-Object LastWriteTime -Descending |
+        Select-Object -First 1
+
+    if ($lastLog) {
+        $script:currentLogFile = $lastLog.FullName
+        return $script:currentLogFile
+    }
+
+    return $null
+}
 
 function Get-LogConfiguration {
+    if (-not (Assert-ProjectPath)) {
+        return
+    }
+
     if ($script:logParameters) {
         Write-Host "`nConfiguração de log atual:" -ForegroundColor Cyan
         Write-Host $($script:logParameters -join ' ') -ForegroundColor Green
@@ -60,27 +111,36 @@ function Get-LogConfiguration {
     switch ($choice) {
         '1' { 
             $logFile = Get-NextLogFile
-            Write-Host "Usando arquivo de log: $logFile" -ForegroundColor Green
-            $script:logParameters = @("--output-file=$logFile", "--tee", "--format=$format")
+            if ($logFile) {
+                Write-Host "Usando arquivo de log: $logFile" -ForegroundColor Green
+                $script:logParameters = @("--output-file=$logFile", "--tee", "--format=$format")
+            }
         }
         '2' { 
-            if (Test-Path "flake8.log") {
-                Remove-Item "flake8.log" -Force
+            $defaultLog = Join-Path $script:projectLogPath "flake8.log"
+            if (Test-Path $defaultLog) {
+                Remove-Item $defaultLog -Force
             }
-            $script:logParameters = @("--output-file=flake8.log", "--tee", "--format=$format")
+            $script:currentLogFile = $defaultLog
+            $script:logParameters = @("--output-file=$defaultLog", "--tee", "--format=$format")
         }
         '3' { 
-            $logFile = Read-Host "Digite o nome do arquivo de log"
+            $logName = Read-Host "Digite o nome do arquivo de log"
+            $logFile = Join-Path $script:projectLogPath $logName
+            $script:currentLogFile = $logFile
             $script:logParameters = @("--output-file=$logFile", "--tee", "--format=$format")
         }
         '4' { 
+            $script:currentLogFile = $null
             $script:logParameters = @("--format=$format")
         }
         default { 
             Write-Host "Opção inválida! Usando novo arquivo de log..." -ForegroundColor Yellow
             $logFile = Get-NextLogFile
-            Write-Host "Usando arquivo de log: $logFile" -ForegroundColor Green
-            $script:logParameters = @("--output-file=$logFile", "--tee", "--format=$format")
+            if ($logFile) {
+                Write-Host "Usando arquivo de log: $logFile" -ForegroundColor Green
+                $script:logParameters = @("--output-file=$logFile", "--tee", "--format=$format")
+            }
         }
     }
 }

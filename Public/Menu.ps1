@@ -2,7 +2,11 @@ function Show-Main {
     [CmdletBinding()]
     param(
         [Parameter(Position = 0)]
-        [ValidateScript({Test-Path $_})]
+        [ValidateScript({
+            $_ -eq $null -or $_ -eq '' -or (Test-Path $_)
+        }, ErrorMessage = "Caminho '{0}' não existe ou é inválido")]
+        [AllowEmptyString()]
+        [AllowNull()]
         [string]$ProjectPath,
         
         [Parameter()]
@@ -13,27 +17,23 @@ function Show-Main {
     $ErrorActionPreference = 'Stop'
 
     try {
-        # Carregar módulo com força apenas se especificado
-        $moduleParams = @{
-            Path = Join-Path $PSScriptRoot "Flake8Automation.psd1"
-        }
-        if ($Force) {
-            $moduleParams['Force'] = $true
-        }
-        Import-Module @moduleParams
-
         # Inicialização
         if (-not (Initialize-FlakeEnvironment -Force:$Force)) {
             throw "Falha na inicialização do ambiente"
         }
 
         # Definir e validar caminho do projeto
-        $ProjectPath = $ProjectPath ?? (Select-ProjectDirectory)
-        if (-not $ProjectPath) {
+        if ([string]::IsNullOrWhiteSpace($ProjectPath)) {
+            $script:projectPath = Select-ProjectDirectory
+        } else {
+            $script:projectPath = $ProjectPath
+        }
+        
+        if (-not $script:projectPath) {
             throw "Caminho do projeto não definido"
         }
         
-        Set-Location $ProjectPath
+        Set-Location $script:projectPath
 
         # Menu principal
         do {
@@ -45,12 +45,14 @@ function Show-Main {
                     '1' { 
                         $filePath = Read-Host "Caminho do arquivo"
                         Start-Flake8Analysis -Path $filePath
+                        Read-Host "Pressione ENTER para continuar"
                     }
                     '2' { 
                         $projectDir = Select-ProjectDirectory
                         if ($projectDir) {
                             Start-Flake8Analysis -Path $projectDir
                         }
+                        Read-Host "Pressione ENTER para continuar"
                     }
                     '3' { 
                         $targetPath = Select-AnalysisPath
@@ -61,43 +63,51 @@ function Show-Main {
                             }
                             Start-Flake8Analysis -Path $targetPath -Config $config
                         }
+                        Read-Host "Pressione ENTER para continuar"
                     }
                     '4' {
                         if (Test-Flake8Installation) {
                             $pythonPath = Get-VenvPython
                             & $pythonPath -m flake8 --help
                         }
-                        pause
+                        Read-Host "Pressione ENTER para continuar"
                     }
                     '5' {
                         Get-LogConfiguration
                         Write-Host "`nConfiguração de log atualizada!" -ForegroundColor Green
-                        pause
+                        Read-Host "Pressione ENTER para continuar"
                     }
                     '6' {
                         Format-CodeWithBlack
-                        pause
+                        Read-Host "Pressione ENTER para continuar"
                     }
                     '7' {
-                        Write-Host "Digite o caminho do arquivo de log do Flake8:" -ForegroundColor Yellow
-                        $logFile = Read-Host
-                        if (Assert-ProjectPath -and (Test-Path $logFile)) {
-                            Repair-Flake8Errors $logFile
-                        } else {
-                            Write-Host "Arquivo de log não encontrado!" -ForegroundColor Red
+                        if (-not $script:projectPath) {
+                            $script:projectPath = Select-ProjectDirectory
                         }
-                        pause
+                        if ($script:projectPath) {
+                            $logFile = Get-CurrentLogFile
+                            if ($logFile) {
+                                Write-Host "Usando arquivo de log: $logFile" -ForegroundColor Green
+                                Repair-Flake8Errors $logFile
+                            } else {
+                                Write-Host "Nenhum arquivo de log encontrado!" -ForegroundColor Red
+                            }
+                        } else {
+                            Write-Host "Diretório do projeto não configurado!" -ForegroundColor Red
+                        }
+                        Read-Host "Pressione ENTER para continuar"
                     }
                     'Q' { return }
                     default {
                         Write-Host "Opção inválida!" -ForegroundColor Red
-                        pause
+                        Read-Host "Pressione ENTER para continuar"
                     }
                 }
             }
             catch {
                 Write-LogMessage "Erro: $_" -Level Error
-                pause
+                Read-Host "Pressione ENTER para continuar"
             }
         } while ($option -ne 'Q')
     }

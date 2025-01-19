@@ -1,12 +1,10 @@
-# Importa todos os arquivos .ps1 da pasta Private primeiro
-Get-ChildItem -Path "$PSScriptRoot\Private\*.ps1" | ForEach-Object {
-    . $_.FullName
-}
+Write-Verbose "Iniciando carregamento do módulo Flake8Automation"
 
-# Depois importa todos os arquivos .ps1 da pasta Public
-Get-ChildItem -Path "$PSScriptRoot\Public\*.ps1" | ForEach-Object {
-    . $_.FullName
+# Carrega arquivos na ordem correta (primeiro Private, depois Public)
+foreach ($folder in @('Private', 'Public')) {
+    $folderPath = Join-Path $PSScriptRoot $folder
+    if (Test-Path $folderPath) {
+        Get-ChildItem -Path $folderPath -Filter '*.ps1' | 
+            ForEach-Object { . $_.FullName }
+    }
 }
-
-# Exporta apenas as funções listadas no manifesto
-Export-ModuleMember -Function $((Get-Module Flake8Automation).ExportedFunctions.Keys)

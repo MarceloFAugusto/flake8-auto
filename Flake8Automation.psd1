@@ -6,6 +6,7 @@
     Description = 'Módulo para automação de verificações Flake8'
     PowerShellVersion = '5.1'
     RequiredModules = @()
+    RequiredAssemblies = @('System.Windows.Forms')
     FunctionsToExport = @(
         # Menu
         'Show-MenuOptions',

@@ -7,16 +7,13 @@ param(
     [switch]$Force
 )
 
-# Determina o caminho do módulo relativo a este script
-$modulePath = Join-Path $PSScriptRoot "Flake8Automation.psd1"
-
-# Verifica se o módulo existe
-if (-not (Test-Path $modulePath)) {
-    throw "Módulo Flake8Automation não encontrado em: $modulePath"
+# Remove o módulo se já estiver carregado
+if (Get-Module Flake8Automation) {
+    Remove-Module Flake8Automation -Force
 }
 
-# Importa o módulo
-Import-Module $modulePath -Force:$Force
+# Importa usando o manifesto
+Import-Module (Join-Path $PSScriptRoot "Flake8Automation.psd1") -Verbose
 
 # Executa o menu principal
 $params = @{}

@@ -1,5 +1,6 @@
+$script:projectPath = $null
+
 function Show-MenuOptions {
-    Clear-Host
     Write-Host "=== Flake8 Menu de Verificação ===" -ForegroundColor Cyan
     Write-Host "1. Verificar arquivo específico"
     Write-Host "2. Verificar todo projeto"
@@ -38,6 +39,9 @@ function Find-Flake8Config {
 }
 
 function Select-ProjectDirectory {
+    [CmdletBinding()]
+    param()
+    
     $initialPath = (Get-Location).Path
     $configPath = Find-Flake8Config $initialPath
 
@@ -49,9 +53,15 @@ function Select-ProjectDirectory {
         $choice = Read-Host "Escolha uma opção"
 
         switch ($choice) {
-            "1" { return $configPath }
+            "1" { 
+                $script:projectPath = $configPath
+                return $configPath 
+            }
             "2" { break }
-            default { return $null }
+            default { 
+                $script:projectPath = $null
+                return $null 
+            }
         }
     } else {
         Write-Host "`nNão foi encontrado arquivo .flake8 no diretório atual ou superiores." -ForegroundColor Yellow
@@ -60,6 +70,7 @@ function Select-ProjectDirectory {
         $choice = Read-Host "Escolha uma opção"
         
         if ($choice -ne "1") {
+            $script:projectPath = $null
             return $null
         }
     }
@@ -72,12 +83,15 @@ function Select-ProjectDirectory {
     if ($folderBrowser.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         $selectedPath = $folderBrowser.SelectedPath
         if (Test-Path (Join-Path $selectedPath ".flake8")) {
+            $script:projectPath = $selectedPath
             return $selectedPath
         } else {
             Write-Host "Arquivo .flake8 não encontrado no diretório selecionado!" -ForegroundColor Red
+            $script:projectPath = $null
             return $null
         }
     }
+    $script:projectPath = $null
     return $null
 }
 
@@ -107,4 +121,12 @@ function Select-AnalysisPath {
             return $null
         }
     }
+}
+
+function Assert-ProjectPath {
+    if ([string]::IsNullOrEmpty($script:projectPath)) {
+        Write-Host "Caminho do projeto não definido!" -ForegroundColor Red
+        return $false
+    }
+    return $true
 }
