@@ -145,7 +145,7 @@ function script:Get-LogConfiguration {
     }
 }
 
-function Get-GitignorePatterns {
+function script:Get-GitignorePatterns {
     param (
         [string]$projectPath
     )
@@ -172,7 +172,7 @@ function Get-GitignorePatterns {
     return $patterns
 }
 
-function Get-ProjectFiles {
+function script:Get-ProjectFiles {
     param (
         [string]$projectDir,
         [string]$filter = "*.py"
