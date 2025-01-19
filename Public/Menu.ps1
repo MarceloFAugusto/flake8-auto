@@ -1,17 +1,3 @@
-function Show-MenuOptions {
-    Clear-Host
-    Write-Host "=== Flake8 Menu de Verificação ===" -ForegroundColor Cyan
-    Write-Host "1. Verificar arquivo específico"
-    Write-Host "2. Verificar todo projeto"
-    Write-Host "3. Verificar com configurações personalizadas"
-    Write-Host "4. Exibir ajuda do Flake8"
-    Write-Host "5. Configurar arquivo de log"
-    Write-Host "6. Formatar código com Black"
-    Write-Host "7. Tentar correção automática de erros do Flake8"
-    Write-Host "Q. Sair"
-    Write-Host
-}
-
 function Show-Main {
     [CmdletBinding()]
     param(
