@@ -45,25 +45,27 @@ function Test-PackageInstalled {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
         [string]$PackageName
     )
     
-    $pythonPath = Get-VenvPython
-    $result = & $pythonPath -m pip show $PackageName 2>&1
-    return $LASTEXITCODE -eq 0
-}
+    try {
+        $pythonPath = Get-VenvPython
+        if ($null -eq $pythonPath) {
+            Write-Error "Ambiente Python virtual não encontrado"
+            return $false
+        }
 
-function Test-SingleFile {
-    if (-not (Initialize-VirtualEnv)) { return }
-    if (-not (Test-Flake8Installation)) { return }
-    $pythonPath = Get-VenvPython
-    Write-Host "Digite o caminho do arquivo:" -ForegroundColor Yellow
-    $file = Read-Host
-    if (Test-Path $file) {
-        Get-LogConfiguration
-        & $pythonPath -m flake8 $file @script:logParameters
-        Confirm-BlackFormat
-    } else {
-        Write-Host "Arquivo não encontrado!" -ForegroundColor Red
+        # Usa pip list que é mais rápido que pip show
+        $installedPackages = & $pythonPath -m pip list 2>$null
+        
+        # Verifica se o pacote está na lista de pacotes instalados
+        $packageFound = $installedPackages | Where-Object { $_ -match "^$PackageName\s+" }
+        
+        return [bool]$packageFound
+    }
+    catch {
+        Write-Error "Erro ao verificar pacote $PackageName`: $_"
+        return $false
     }
 }

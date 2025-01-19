@@ -7,13 +7,32 @@
     PowerShellVersion = '5.1'
     RequiredModules = @()
     FunctionsToExport = @(
-        # Funções públicas
+        # Menu
+        'Show-MenuOptions',
         'Show-Main',
+        
+        # Project
+        'Find-Flake8Config',
+        'Select-ProjectDirectory',
+        
+        # Environment
         'Initialize-FlakeEnvironment',
+        'New-VirtualEnv',
+        'Get-VenvPython',
+        'Initialize-VirtualEnv',
+        'Install-RequiredPackages',
+        
+        # Analysis
         'Start-Flake8Analysis',
-        'Format-CodeWithBlack',
+        'Get-Flake8Errors',
+        'Test-Flake8Installation',
         'Repair-Flake8Errors',
-        'Test-CustomSettings'
+        'Install-FixTools',
+        
+        # Formatting
+        'Format-CodeWithBlack',
+        'Test-BlackInstallation',
+        'Confirm-BlackFormat'
     )
     CmdletsToExport = @()
     VariablesToExport = '*'

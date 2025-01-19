@@ -56,25 +56,3 @@ function Select-ProjectDirectory {
     }
     return $null
 }
-
-function Test-CustomSettings {
-    if (-not (Assert-ProjectPath)) { return }
-    if (-not (Initialize-VirtualEnv)) { return }
-    if (-not (Test-Flake8Installation)) { return }
-    $pythonPath = Get-VenvPython
-    
-    Write-Host "Digite o comprimento máximo da linha (Enter para padrão $($script:defaultConfig.MaxLineLength)):" -ForegroundColor Yellow
-    $maxLength = Read-Host
-    if (!$maxLength) { $maxLength = $script:defaultConfig.MaxLineLength }
-
-    Write-Host "Digite a complexidade máxima (Enter para padrão $($script:defaultConfig.MaxComplexity)):" -ForegroundColor Yellow
-    $maxComplexity = Read-Host
-    if (!$maxComplexity) { $maxComplexity = $script:defaultConfig.MaxComplexity }
-
-    Get-LogConfiguration
-    
-    Push-Location $script:projectPath
-    & $pythonPath -m flake8 . --max-line-length=$maxLength --max-complexity=$maxComplexity @script:logParameters
-    Pop-Location
-    Confirm-BlackFormat
-}
